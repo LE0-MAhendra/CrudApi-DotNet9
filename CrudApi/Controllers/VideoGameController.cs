@@ -45,5 +45,35 @@ namespace CrudApi.Controllers
             videoGames.Add(newGame);
             return CreatedAtAction(nameof(GetVideoGame), new { id = newGame.Id }, newGame);
         }
+
+        [HttpPut("{id}")]
+        public IActionResult UpdateGameID(int id, VideoGame updatesGame)
+        {
+            var game = videoGames.FirstOrDefault(g => g.Id == id);
+            if (game == null)
+            {
+                return NotFound();
+            }
+
+            game.Title = updatesGame.Title;
+            game.Platform = updatesGame.Platform;
+            game.Developer = updatesGame.Developer;
+            game.Publisher = updatesGame.Publisher;
+
+            return NoContent();
+        }
+
+        [HttpDelete("{id}")]
+        public ActionResult<List<VideoGame>> DeleteVideoGame(int id)
+        {
+            var game = videoGames.FirstOrDefault(g => g.Id == id);
+            if (game == null)
+            {
+                return NotFound();
+            }
+            videoGames.Remove(game);
+            return Ok(videoGames);
+        }
+
     }
 }
