@@ -1,31 +1,35 @@
-﻿using Microsoft.AspNetCore.Http;
+﻿using CrudApi.Data;
+using Microsoft.AspNetCore.Http;
 using Microsoft.AspNetCore.Mvc;
+using Microsoft.EntityFrameworkCore;
 
 namespace CrudApi.Controllers
 {
     [Route("api/[controller]")]
     [ApiController]
-    public class VideoGameController : ControllerBase
+    public class VideoGameController(VideoGameDbContext context) : ControllerBase
     {
-        static private List<VideoGame> videoGames =new List<VideoGame>
-        {
-                new VideoGame { Id = 1, Title = "The Legend of Zelda: Breath of the Wild", Platform = "Nintendo Switch", Developer = "Nintendo EPD", Publisher = "Nintendo" },
-                new VideoGame { Id = 2, Title = "The Witcher 3: Wild Hunt", Platform = "PC", Developer = "CD Projekt Red", Publisher = "CD Projekt" },
-                new VideoGame { Id = 3, Title = "God of War", Platform = "PlayStation 4", Developer = "Santa Monica Studio", Publisher = "Sony Interactive Entertainment" },
-                new VideoGame { Id = 4, Title = "Minecraft", Platform = "PC", Developer = "Mojang Studios", Publisher = "Mojang" },
-                new VideoGame { Id = 5, Title = "Red Dead Redemption 2", Platform = "PlayStation 4", Developer = "Rockstar Studios", Publisher = "Rockstar Games" }
-        };
+        //static private List<VideoGame> videoGames =new List<VideoGame>
+        //{
+        //        new VideoGame { Id = 1, Title = "The Legend of Zelda: Breath of the Wild", Platform = "Nintendo Switch", Developer = "Nintendo EPD", Publisher = "Nintendo" },
+        //        new VideoGame { Id = 2, Title = "The Witcher 3: Wild Hunt", Platform = "PC", Developer = "CD Projekt Red", Publisher = "CD Projekt" },
+        //        new VideoGame { Id = 3, Title = "God of War", Platform = "PlayStation 4", Developer = "Santa Monica Studio", Publisher = "Sony Interactive Entertainment" },
+        //        new VideoGame { Id = 4, Title = "Minecraft", Platform = "PC", Developer = "Mojang Studios", Publisher = "Mojang" },
+        //        new VideoGame { Id = 5, Title = "Red Dead Redemption 2", Platform = "PlayStation 4", Developer = "Rockstar Studios", Publisher = "Rockstar Games" }
+        //};
+
+        private readonly VideoGameDbContext _context=context;
 
         [HttpGet]
-        public ActionResult<List<VideoGame>> GetVideoGames()
+        public async Task<ActionResult<List<VideoGame>>> GetVideoGames()
         {
-            return Ok(videoGames);
+            return Ok(await _context.VideoGames.ToListAsync());
         }
 
         [HttpGet("{id}")]
-        public ActionResult<VideoGame> GetVideoGame(int id)
+        public async Task<ActionResult<VideoGame>> GetVideoGame(int id)
         {
-            var game = videoGames.FirstOrDefault(g => g.Id == id);
+            var game = await _context.VideoGames.FindAsync( id);
             if (game is null)
             {
                 return NotFound();
@@ -35,21 +39,21 @@ namespace CrudApi.Controllers
         }
 
         [HttpPost]
-        public ActionResult<VideoGame> AddGame(VideoGame newGame)
+        public async Task<ActionResult<VideoGame>> AddGame(VideoGame newGame)
         {
             if(newGame is null)
             {
                 return BadRequest();
             }
-            newGame.Id = videoGames.Max(g => g.Id) + 1;
-            videoGames.Add(newGame);
+            _context.VideoGames.Add(newGame);
+            await _context.SaveChangesAsync();
             return CreatedAtAction(nameof(GetVideoGame), new { id = newGame.Id }, newGame);
         }
 
         [HttpPut("{id}")]
-        public IActionResult UpdateGameID(int id, VideoGame updatesGame)
+        public async Task<IActionResult> UpdateGameID(int id, VideoGame updatesGame)
         {
-            var game = videoGames.FirstOrDefault(g => g.Id == id);
+            var game = await _context.VideoGames.FindAsync(id);
             if (game == null)
             {
                 return NotFound();
@@ -59,20 +63,21 @@ namespace CrudApi.Controllers
             game.Platform = updatesGame.Platform;
             game.Developer = updatesGame.Developer;
             game.Publisher = updatesGame.Publisher;
-
-            return NoContent();
+            await _context.SaveChangesAsync();
+            return Ok(game);
         }
 
         [HttpDelete("{id}")]
-        public ActionResult<List<VideoGame>> DeleteVideoGame(int id)
+        public async Task<ActionResult<List<VideoGame>>> DeleteVideoGame(int id)
         {
-            var game = videoGames.FirstOrDefault(g => g.Id == id);
+            var game = await _context.VideoGames.FindAsync(id);
             if (game == null)
             {
                 return NotFound();
             }
-            videoGames.Remove(game);
-            return Ok(videoGames);
+            _context.VideoGames.Remove(game);
+            await _context.SaveChangesAsync();
+            return Ok();
         }
 
     }
