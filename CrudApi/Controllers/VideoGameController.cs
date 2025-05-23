@@ -33,5 +33,17 @@ namespace CrudApi.Controllers
             return Ok(game);
 
         }
+
+        [HttpPost]
+        public ActionResult<VideoGame> AddGame(VideoGame newGame)
+        {
+            if(newGame is null)
+            {
+                return BadRequest();
+            }
+            newGame.Id = videoGames.Max(g => g.Id) + 1;
+            videoGames.Add(newGame);
+            return CreatedAtAction(nameof(GetVideoGame), new { id = newGame.Id }, newGame);
+        }
     }
 }
